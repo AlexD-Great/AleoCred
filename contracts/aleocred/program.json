@@ -1,0 +1,6 @@
+{
+  "program": "credentify.aleo",
+  "version": "0.1.0",
+  "description": "Private verifiable credential system for event attendance",
+  "license": "MIT"
+}
