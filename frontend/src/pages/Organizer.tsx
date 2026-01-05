@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PlusCircle, Users, Calendar, Shield } from 'lucide-react'
+import { PlusCircle, Users, Calendar } from 'lucide-react'
 
 export default function Organizer() {
   const publicKey = null // Wallet integration placeholder
