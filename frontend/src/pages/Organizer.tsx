@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { useWallet } from '@demox-labs/aleo-wallet-adapter-react'
-import { PlusCircle, Users, Calendar } from 'lucide-react'
+import { PlusCircle, Users, Calendar, Shield } from 'lucide-react'
 
 export default function Organizer() {
-  const { publicKey } = useWallet()
+  const publicKey = null // Wallet integration placeholder
   const [eventName, setEventName] = useState('')
   const [eventId, setEventId] = useState('')
   const [recipientAddress, setRecipientAddress] = useState('')

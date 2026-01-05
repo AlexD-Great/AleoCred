@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui'
 import { Shield } from 'lucide-react'
 
 export default function Navbar() {
@@ -36,7 +35,9 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center">
-            <WalletMultiButton />
+            <button className="btn-primary">
+              Connect Wallet
+            </button>
           </div>
         </div>
       </div>

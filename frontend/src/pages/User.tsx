@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useWallet } from '@demox-labs/aleo-wallet-adapter-react'
 import { Award, CheckCircle, Shield as ShieldIcon } from 'lucide-react'
 
 interface Credential {
@@ -10,7 +9,7 @@ interface Credential {
 }
 
 export default function User() {
-  const { publicKey } = useWallet()
+  const publicKey = null // Wallet integration placeholder
   const [credentials] = useState<Credential[]>([
     // Mock data for demonstration
   ])
