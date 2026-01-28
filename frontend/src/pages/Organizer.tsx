@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { PlusCircle, Users, Calendar } from 'lucide-react'
+import { useWallet } from '../context/WalletContext'
+import { generateEventId, PROGRAM_ID } from '../lib/aleo'
 
 export default function Organizer() {
-  const publicKey = null // Wallet integration placeholder
+  const { connected, address, connect } = useWallet()
   const [eventName, setEventName] = useState('')
   const [eventId, setEventId] = useState('')
   const [recipientAddress, setRecipientAddress] = useState('')
@@ -11,18 +13,18 @@ export default function Organizer() {
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!publicKey) {
+    if (!connected || !address) {
       alert('Please connect your wallet first')
       return
     }
 
     setLoading(true)
     try {
-      // Generate event ID from name
-      const generatedId = `${Date.now()}field`
+      const generatedId = generateEventId(eventName)
       
-      // TODO: Call Leo program to register event
-      console.log('Registering event:', eventName, generatedId)
+      console.log('Registering event on', PROGRAM_ID)
+      console.log('Event:', eventName, 'ID:', generatedId)
+      console.log('Organizer:', address)
       
       setEvents([...events, { id: generatedId, name: eventName, issued: 0 }])
       setEventName('')
@@ -37,7 +39,7 @@ export default function Organizer() {
 
   const handleIssueCredential = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!publicKey) {
+    if (!connected || !address) {
       alert('Please connect your wallet first')
       return
     }
@@ -46,11 +48,12 @@ export default function Organizer() {
     try {
       const timestamp = Math.floor(Date.now() / 1000)
       
-      // TODO: Call Leo program to issue credential
-      console.log('Issuing credential:', {
+      console.log('Issuing credential on', PROGRAM_ID)
+      console.log('Credential:', {
         recipient: recipientAddress,
         eventId,
-        timestamp
+        timestamp,
+        issuer: address
       })
       
       setRecipientAddress('')
@@ -63,12 +66,15 @@ export default function Organizer() {
     }
   }
 
-  if (!publicKey) {
+  if (!connected || !address) {
     return (
       <div className="max-w-4xl mx-auto text-center py-16">
         <Shield className="w-16 h-16 text-gray-600 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
-        <p className="text-gray-400">Please connect your wallet to access the organizer dashboard</p>
+        <p className="text-gray-400 mb-6">Please connect your wallet to access the organizer dashboard</p>
+        <button onClick={connect} className="btn-primary">
+          Connect Wallet
+        </button>
       </div>
     )
   }

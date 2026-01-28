@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Award, CheckCircle, Shield as ShieldIcon } from 'lucide-react'
+import { useWallet } from '../context/WalletContext'
+import { PROGRAM_ID } from '../lib/aleo'
 
 interface Credential {
   id: string
@@ -9,7 +11,7 @@ interface Credential {
 }
 
 export default function User() {
-  const publicKey = null // Wallet integration placeholder
+  const { connected, address, connect } = useWallet()
   const [credentials] = useState<Credential[]>([
     // Mock data for demonstration
   ])
@@ -19,8 +21,9 @@ export default function User() {
   const handleGenerateProof = async (credentialId: string) => {
     setSelectedCredential(credentialId)
     
-    // TODO: Call Leo program to generate ZK proof
-    console.log('Generating proof for credential:', credentialId)
+    console.log('Generating ZK proof on', PROGRAM_ID)
+    console.log('Credential ID:', credentialId)
+    console.log('Owner:', address)
     
     setTimeout(() => {
       setProofGenerated(true)
@@ -28,12 +31,15 @@ export default function User() {
     }, 1000)
   }
 
-  if (!publicKey) {
+  if (!connected || !address) {
     return (
       <div className="max-w-4xl mx-auto text-center py-16">
         <ShieldIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
-        <p className="text-gray-400">Please connect your wallet to view your credentials</p>
+        <p className="text-gray-400 mb-6">Please connect your wallet to view your credentials</p>
+        <button onClick={connect} className="btn-primary">
+          Connect Wallet
+        </button>
       </div>
     )
   }

@@ -35,6 +35,21 @@ temp/
 logs/
 *.log
 
-# Helper files (not for GitHub)
+# Helper/reference files (not for GitHub)
 Aleo_Hackhathon.md
 SETUP.md
+
+# AI/Debug helper scripts
+verify-deployment.mjs
+verify-balance.mjs
+transfer-credits.mjs
+simple-deploy.mjs
+deploy-sdk.mjs
+find-records.mjs
+check-tx.mjs
+check-balance.mjs
+transfer-public.mjs
+deploy.sh
+
+# Keep build artifacts for contract (needed for deployment reference)
+!contracts/aleocred/build/
