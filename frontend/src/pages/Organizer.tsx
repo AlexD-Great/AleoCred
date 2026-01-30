@@ -4,7 +4,7 @@ import { useWallet } from '../context/WalletContext'
 import { generateEventId, PROGRAM_ID } from '../lib/aleo'
 
 export default function Organizer() {
-  const { account, isConnected, connect, requestTransaction } = useWallet()
+  const { account, isConnected, requestTransaction } = useWallet()
   const [eventName, setEventName] = useState('')
   const [eventId, setEventId] = useState('')
   const [recipientAddress, setRecipientAddress] = useState('')

@@ -11,13 +11,12 @@ interface Credential {
 }
 
 export default function User() {
-  const { account, isConnected, connect, requestTransaction } = useWallet()
+  const { account, isConnected } = useWallet()
   const [credentials] = useState<Credential[]>([
     // Credentials will be fetched from wallet records in production
   ])
   const [selectedCredential, setSelectedCredential] = useState<string | null>(null)
   const [proofGenerated, setProofGenerated] = useState(false)
-  const [loading, setLoading] = useState(false)
 
   const handleGenerateProof = async (credentialId: string) => {
     if (!isConnected || !account) {
@@ -26,7 +25,6 @@ export default function User() {
     }
 
     setSelectedCredential(credentialId)
-    setLoading(true)
     
     try {
       console.log('Generating ZK proof on', PROGRAM_ID)
@@ -45,8 +43,6 @@ export default function User() {
     } catch (error: any) {
       console.error('Error generating proof:', error)
       alert(error.message || 'Failed to generate proof')
-    } finally {
-      setLoading(false)
     }
   }
 
