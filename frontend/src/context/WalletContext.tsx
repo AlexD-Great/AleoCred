@@ -1,87 +1,70 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
+import { WalletProvider as AleoWalletProvider, useWallet as useAleoWallet } from '@demox-labs/aleo-wallet-adapter-react';
+import { WalletModalProvider } from '@demox-labs/aleo-wallet-adapter-reactui';
+import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
+import { DecryptPermission, WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
 
-interface WalletContextType {
-  connected: boolean;
-  address: string | null;
-  connecting: boolean;
-  connect: () => Promise<void>;
-  disconnect: () => void;
-}
+import '@demox-labs/aleo-wallet-adapter-reactui/styles.css';
 
-const WalletContext = createContext<WalletContextType | undefined>(undefined);
-
-declare global {
-  interface Window {
-    leoWallet?: {
-      connect: () => Promise<{ address: string }>;
-      disconnect: () => Promise<void>;
-      on: (event: string, callback: (data: any) => void) => void;
-    };
-    puzzle?: {
-      connect: () => Promise<{ address: string }>;
-      disconnect: () => Promise<void>;
-    };
-  }
-}
+export type WalletType = 'Leo Wallet';
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [connected, setConnected] = useState(false);
-  const [address, setAddress] = useState<string | null>(null);
-  const [connecting, setConnecting] = useState(false);
-
-  useEffect(() => {
-    const savedAddress = localStorage.getItem('aleo_address');
-    if (savedAddress) {
-      setAddress(savedAddress);
-      setConnected(true);
-    }
-  }, []);
-
-  const connect = async () => {
-    setConnecting(true);
-    try {
-      if (window.leoWallet) {
-        const result = await window.leoWallet.connect();
-        setAddress(result.address);
-        setConnected(true);
-        localStorage.setItem('aleo_address', result.address);
-      } else if (window.puzzle) {
-        const result = await window.puzzle.connect();
-        setAddress(result.address);
-        setConnected(true);
-        localStorage.setItem('aleo_address', result.address);
-      } else {
-        alert('Please install Leo Wallet or Puzzle Wallet extension');
-        window.open('https://leo.app/', '_blank');
-      }
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      alert('Failed to connect wallet. Please try again.');
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  const disconnect = () => {
-    setConnected(false);
-    setAddress(null);
-    localStorage.removeItem('aleo_address');
-    if (window.leoWallet) {
-      window.leoWallet.disconnect();
-    }
-  };
+  const wallets = useMemo(
+    () => [
+      new LeoWalletAdapter({
+        appName: 'AleoCred',
+      }),
+    ],
+    []
+  );
 
   return (
-    <WalletContext.Provider value={{ connected, address, connecting, connect, disconnect }}>
-      {children}
-    </WalletContext.Provider>
+    <AleoWalletProvider
+      wallets={wallets}
+      decryptPermission={DecryptPermission.NoDecrypt}
+      network={WalletAdapterNetwork.Testnet}
+      autoConnect={false}
+    >
+      <WalletModalProvider>{children}</WalletModalProvider>
+    </AleoWalletProvider>
   );
 }
 
+// Re-export the wallet hook with our custom interface
 export function useWallet() {
-  const context = useContext(WalletContext);
-  if (context === undefined) {
-    throw new Error('useWallet must be used within a WalletProvider');
-  }
-  return context;
+  const wallet = useAleoWallet();
+  
+  return {
+    account: wallet.publicKey ? { address: wallet.publicKey, network: 'testnet' } : null,
+    isConnecting: wallet.connecting,
+    isConnected: wallet.connected,
+    hasWallet: !!wallet.wallet,
+    connect: async (_type: WalletType) => {
+      if (!wallet.wallet) {
+        throw new Error('Leo Wallet extension not found. Please install it from https://leo.app/');
+      }
+      await wallet.connect(DecryptPermission.NoDecrypt, WalletAdapterNetwork.Testnet);
+    },
+    disconnect: () => wallet.disconnect(),
+    requestTransaction: async (programId: string, functionName: string, inputs: string[]): Promise<string> => {
+      if (!wallet.requestTransaction) {
+        throw new Error('Transaction request not supported');
+      }
+      
+      // Use the wallet adapter's transaction request with proper structure
+      const txId = await wallet.requestTransaction({
+        address: wallet.publicKey || '',
+        chainId: 'testnet3',
+        fee: 1000000,
+        feePrivate: false,
+        transitions: [{
+          program: programId,
+          functionName: functionName,
+          inputs: inputs,
+        }],
+      });
+      
+      return txId;
+    },
+  };
 }

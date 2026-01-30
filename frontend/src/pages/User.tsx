@@ -11,35 +11,51 @@ interface Credential {
 }
 
 export default function User() {
-  const { connected, address, connect } = useWallet()
+  const { account, isConnected, connect, requestTransaction } = useWallet()
   const [credentials] = useState<Credential[]>([
-    // Mock data for demonstration
+    // Credentials will be fetched from wallet records in production
   ])
   const [selectedCredential, setSelectedCredential] = useState<string | null>(null)
   const [proofGenerated, setProofGenerated] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleGenerateProof = async (credentialId: string) => {
+    if (!isConnected || !account) {
+      alert('Please connect your wallet first')
+      return
+    }
+
     setSelectedCredential(credentialId)
+    setLoading(true)
     
-    console.log('Generating ZK proof on', PROGRAM_ID)
-    console.log('Credential ID:', credentialId)
-    console.log('Owner:', address)
-    
-    setTimeout(() => {
+    try {
+      console.log('Generating ZK proof on', PROGRAM_ID)
+      console.log('Credential ID:', credentialId)
+      console.log('Owner:', account.address)
+      
+      // In production, this would call verify_credential function
+      // For now, simulate proof generation
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
       setProofGenerated(true)
-      setTimeout(() => setProofGenerated(false), 3000)
-    }, 1000)
+      setTimeout(() => {
+        setProofGenerated(false)
+        setSelectedCredential(null)
+      }, 3000)
+    } catch (error: any) {
+      console.error('Error generating proof:', error)
+      alert(error.message || 'Failed to generate proof')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  if (!connected || !address) {
+  if (!isConnected || !account) {
     return (
       <div className="max-w-4xl mx-auto text-center py-16">
         <ShieldIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
-        <p className="text-gray-400 mb-6">Please connect your wallet to view your credentials</p>
-        <button onClick={connect} className="btn-primary">
-          Connect Wallet
-        </button>
+        <p className="text-gray-400 mb-6">Please connect your wallet using the button in the navigation bar to view your credentials</p>
       </div>
     )
   }

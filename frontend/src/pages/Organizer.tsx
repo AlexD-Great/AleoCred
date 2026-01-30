@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { PlusCircle, Users, Calendar } from 'lucide-react'
+import { PlusCircle, Users, Calendar, Shield as ShieldIcon } from 'lucide-react'
 import { useWallet } from '../context/WalletContext'
 import { generateEventId, PROGRAM_ID } from '../lib/aleo'
 
 export default function Organizer() {
-  const { connected, address, connect } = useWallet()
+  const { account, isConnected, connect, requestTransaction } = useWallet()
   const [eventName, setEventName] = useState('')
   const [eventId, setEventId] = useState('')
   const [recipientAddress, setRecipientAddress] = useState('')
@@ -13,7 +13,7 @@ export default function Organizer() {
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!connected || !address) {
+    if (!isConnected || !account) {
       alert('Please connect your wallet first')
       return
     }
@@ -24,14 +24,22 @@ export default function Organizer() {
       
       console.log('Registering event on', PROGRAM_ID)
       console.log('Event:', eventName, 'ID:', generatedId)
-      console.log('Organizer:', address)
+      console.log('Organizer:', account.address)
       
+      // Call the smart contract
+      const txId = await requestTransaction(
+        PROGRAM_ID,
+        'register_event',
+        [generatedId]
+      )
+      
+      console.log('Transaction submitted:', txId)
       setEvents([...events, { id: generatedId, name: eventName, issued: 0 }])
       setEventName('')
-      alert('Event created successfully!')
-    } catch (error) {
+      alert(`Event created successfully! Transaction: ${txId.slice(0, 10)}...`)
+    } catch (error: any) {
       console.error('Error creating event:', error)
-      alert('Failed to create event')
+      alert(error.message || 'Failed to create event')
     } finally {
       setLoading(false)
     }
@@ -39,42 +47,49 @@ export default function Organizer() {
 
   const handleIssueCredential = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!connected || !address) {
+    if (!isConnected || !account) {
       alert('Please connect your wallet first')
+      return
+    }
+
+    if (!eventId) {
+      alert('Please select an event first')
       return
     }
 
     setLoading(true)
     try {
-      const timestamp = Math.floor(Date.now() / 1000)
-      
       console.log('Issuing credential on', PROGRAM_ID)
       console.log('Credential:', {
         recipient: recipientAddress,
         eventId,
-        timestamp,
-        issuer: address
+        issuer: account.address
       })
       
+      // Call the smart contract
+      const txId = await requestTransaction(
+        PROGRAM_ID,
+        'issue_credential',
+        [recipientAddress, eventId]
+      )
+      
+      console.log('Transaction submitted:', txId)
       setRecipientAddress('')
-      alert('Credential issued successfully!')
-    } catch (error) {
+      alert(`Credential issued successfully! Transaction: ${txId.slice(0, 10)}...`)
+    } catch (error: any) {
       console.error('Error issuing credential:', error)
-      alert('Failed to issue credential')
+      alert(error.message || 'Failed to issue credential')
     } finally {
       setLoading(false)
     }
   }
 
-  if (!connected || !address) {
+  if (!isConnected || !account) {
     return (
       <div className="max-w-4xl mx-auto text-center py-16">
-        <Shield className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+        <ShieldIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
-        <p className="text-gray-400 mb-6">Please connect your wallet to access the organizer dashboard</p>
-        <button onClick={connect} className="btn-primary">
-          Connect Wallet
-        </button>
+        <p className="text-gray-400 mb-6">Please connect your wallet using the button in the navigation bar to access the organizer dashboard</p>
       </div>
     )
   }
@@ -193,10 +208,3 @@ export default function Organizer() {
   )
 }
 
-function Shield({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-  )
-}

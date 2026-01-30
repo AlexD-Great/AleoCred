@@ -20,6 +20,9 @@ program credentify.aleo {
     
     // Track organizer permissions
     mapping organizers: address => bool;
+    
+    // Track if contract is initialized (required for deployment)
+    mapping initialized: u8 => bool;
 
     // Initialize the contract with first organizer
     async transition initialize(admin: address) -> Future {
